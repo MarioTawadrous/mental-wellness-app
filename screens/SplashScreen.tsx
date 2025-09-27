@@ -1,51 +1,51 @@
 import React, { useEffect } from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../types";
 
-type SplashScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "Splash"
->;
+type SplashNavProp = NativeStackNavigationProp<RootStackParamList, "Splash">;
 
-type Props = {
-  navigation: SplashScreenNavigationProp;
-};
+export default function SplashScreen() {
+  const navigation = useNavigation<SplashNavProp>();
 
-const SplashScreen: React.FC<Props> = ({ navigation }) => {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.replace("Onboarding");
-    }, 2000); // 2 seconds splash
-    return () => clearTimeout(timer);
+    const checkLoginStatus = async () => {
+      try {
+        // ✅ look for a saved token (mock example)
+        const userToken = await AsyncStorage.getItem("userToken");
+
+        if (userToken) {
+          // if token exists → go to Main (Bottom Tabs)
+          navigation.replace("Main");
+        } else {
+          // no token → go to SignIn
+          navigation.replace("SignIn");
+        }
+      } catch (error) {
+        console.error("Error checking login status:", error);
+        navigation.replace("SignIn");
+      }
+    };
+
+    setTimeout(checkLoginStatus, 1500); // small delay for splash feel
   }, [navigation]);
 
   return (
     <View style={styles.container}>
-      <Image source={require("../assets/logo.png")} style={styles.logo} />
-      <Text style={styles.title}>Mental Wellness</Text>
+      <Text style={styles.text}>Mental Wellness App</Text>
+      <ActivityIndicator size="large" color="#4CAF50" />
     </View>
   );
-};
-
-export default SplashScreen;
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#A3D8F4", // replace with your Figma primary
+    backgroundColor: "#fff",
   },
-  logo: {
-    width: 120,
-    height: 120,
-    resizeMode: "contain",
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#333",
-  },
+  text: { fontSize: 22, marginBottom: 20, fontWeight: "bold" },
 });
